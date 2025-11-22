@@ -1,0 +1,2 @@
+ALTER TABLE public.bom_master
+ADD COLUMN IF NOT EXISTS safety_stock INTEGER DEFAULT 0;
