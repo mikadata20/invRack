@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label"; // Added Label import
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, History, Search, TrendingUp, TrendingDown, CalendarDays } from "lucide-react";
+import { ArrowLeft, History, Search, TrendingUp, TrendingDown, CalendarDays, ScanLine } from "lucide-react";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/DatePicker"; // Import the new DatePicker component
+import QrScanner from "@/components/QrScanner";
 
 interface StockTransaction {
   id: number;
@@ -35,6 +36,7 @@ const StockTransactions = () => {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -125,6 +127,12 @@ const StockTransactions = () => {
     }
   };
 
+  const handleScanSuccess = (decodedText: string) => {
+    setSearchTerm(decodedText);
+    setIsScannerOpen(false);
+    toast.success("QR Code scanned!");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -159,6 +167,14 @@ const StockTransactions = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1"
               />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsScannerOpen(true)}
+                title="Scan QR Code"
+              >
+                <ScanLine className="h-4 w-4" />
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
@@ -267,6 +283,13 @@ const StockTransactions = () => {
           </CardContent>
         </Card>
       </div>
+      <QrScanner
+        isOpen={isScannerOpen}
+        onOpenChange={setIsScannerOpen}
+        onScanSuccess={handleScanSuccess}
+        title="Scan Search Term"
+        description="Arahkan kamera ke QR Code untuk mencari"
+      />
     </div>
   );
 };
