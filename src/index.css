@@ -74,4 +74,13 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Native Scanner Transparency */
+  body.barcode-scanner-active {
+    background: transparent !important;
+  }
+
+  body.barcode-scanner-active .dialog-overlay {
+    background: transparent !important;
+  }
 }

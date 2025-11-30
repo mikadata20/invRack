@@ -9,8 +9,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScanLine, Camera, AlertCircle } from "lucide-react";
+import { ScanLine, Camera, AlertCircle, X } from "lucide-react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { Capacitor } from "@capacitor/core";
+import { BarcodeScanner, BarcodeFormat, LensFacing } from "@capacitor-mlkit/barcode-scanning";
 
 interface QrScannerProps {
   isOpen: boolean;
@@ -31,17 +33,17 @@ const QrScanner = ({
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerRegionId = "html5qr-code-full-region";
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     let scanner: Html5Qrcode | null = null;
 
-    const startScanner = async () => {
+    const startWebScanner = async () => {
       if (isOpen && !isScanning) {
         try {
           setError(null);
-          // Give the DOM a moment to render the container
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
           if (!document.getElementById(scannerRegionId)) {
             console.error("Scanner container not found");
             return;
@@ -54,7 +56,7 @@ const QrScanner = ({
             fps: 10,
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
-            formatsToSupport: [ 
+            formatsToSupport: [
               Html5QrcodeSupportedFormats.QR_CODE,
               Html5QrcodeSupportedFormats.CODE_128,
               Html5QrcodeSupportedFormats.CODE_39,
@@ -66,48 +68,114 @@ const QrScanner = ({
             { facingMode: "environment" },
             config,
             (decodedText) => {
-              // Success callback
               onScanSuccess(decodedText);
-              // Stop scanning after success if needed, or let parent handle closing
-              // For now we just let parent close the dialog which will trigger cleanup
             },
             (errorMessage) => {
-              // Error callback - usually just "no code found", ignore
               // console.log(errorMessage);
             }
           );
-          
+
           setIsScanning(true);
         } catch (err: any) {
-          console.error("Error starting scanner:", err);
+          console.error("Error starting web scanner:", err);
           setError(err.message || "Gagal memulai kamera.");
           setIsScanning(false);
         }
       }
     };
 
+    const startNativeScanner = async () => {
+      if (isOpen && !isScanning) {
+        try {
+          setError(null);
+
+          const { camera } = await BarcodeScanner.requestPermissions();
+
+          if (camera === 'granted' || camera === 'limited') {
+            document.body.classList.add('barcode-scanner-active');
+
+            // Start scanning
+            const { barcodes } = await BarcodeScanner.scan({
+              formats: [BarcodeFormat.QrCode, BarcodeFormat.Code128, BarcodeFormat.Code39, BarcodeFormat.Ean13],
+              lensFacing: LensFacing.Back
+            });
+
+            if (barcodes.length > 0) {
+              onScanSuccess(barcodes[0].rawValue);
+            }
+          } else {
+            setError("Izin kamera ditolak.");
+          }
+        } catch (err: any) {
+          console.error("Error starting native scanner:", err);
+          setError(err.message || "Gagal memulai scanner native.");
+        } finally {
+          // Always cleanup on finish or error
+          document.body.classList.remove('barcode-scanner-active');
+          setIsScanning(false);
+          // If native scan finishes (success or cancel), we should probably close the dialog
+          // But if it was just an error, maybe keep dialog open to show error?
+          // For now, let's keep dialog open if error, close if success (handled by parent usually)
+        }
+      }
+    };
+
     if (isOpen) {
-      startScanner();
+      if (isNative) {
+        startNativeScanner();
+      } else {
+        startWebScanner();
+      }
     }
 
     // Cleanup function
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().then(() => {
-          scannerRef.current?.clear();
-          setIsScanning(false);
-        }).catch(err => {
-          console.error("Failed to stop scanner", err);
-        });
-        scannerRef.current = null;
+      if (isNative) {
+        document.body.classList.remove('barcode-scanner-active');
+        // Stop scan if unmounting while scanning (though scan() is a promise, stopScan() might be needed if we used startScan())
+        // BarcodeScanner.stopScan(); // Not needed for scan() method usually, but good practice if supported
+      } else {
+        if (scannerRef.current) {
+          scannerRef.current.stop().then(() => {
+            scannerRef.current?.clear();
+            setIsScanning(false);
+          }).catch(err => {
+            console.error("Failed to stop scanner", err);
+          });
+          scannerRef.current = null;
+        }
       }
     };
-  }, [isOpen, onScanSuccess]);
+  }, [isOpen, onScanSuccess, isNative]);
 
-  // Handle manual close to ensure scanner stops
-  const handleClose = () => {
+  const handleClose = async () => {
+    if (isNative) {
+      // If native, we might need to cancel the scan
+      // BarcodeScanner.stopScan(); // Try to stop if running
+      document.body.classList.remove('barcode-scanner-active');
+    }
     onOpenChange(false);
   };
+
+  // If native, we render a transparent/minimal UI to allow seeing the camera behind
+  if (isNative && isOpen) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-end pb-10 bg-transparent">
+        {/* We need a close button that is visible on top of the camera feed */}
+        <Button
+          variant="destructive"
+          size="lg"
+          className="rounded-full h-16 w-16 shadow-lg border-2 border-white"
+          onClick={handleClose}
+        >
+          <X className="h-8 w-8" />
+        </Button>
+        <p className="mt-4 text-white font-bold text-lg drop-shadow-md bg-black/50 px-4 py-1 rounded-full">
+          Scanning...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -123,7 +191,7 @@ const QrScanner = ({
 
         <div className="relative w-full aspect-square bg-black flex flex-col items-center justify-center overflow-hidden">
           <div id={scannerRegionId} className="w-full h-full" />
-          
+
           {!isScanning && !error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white/70">
               <Camera className="h-12 w-12 mb-2 animate-pulse" />
@@ -136,12 +204,11 @@ const QrScanner = ({
               <AlertCircle className="h-12 w-12 mb-2 text-red-500" />
               <p className="font-medium text-red-400 mb-1">Error Kamera</p>
               <p className="text-sm text-gray-300">{error}</p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-4 bg-white/10 border-white/20 hover:bg-white/20 text-white"
                 onClick={() => {
                   setError(null);
-                  // Trigger re-render/re-effect by toggling open state briefly or just let user close and reopen
                   handleClose();
                 }}
               >
