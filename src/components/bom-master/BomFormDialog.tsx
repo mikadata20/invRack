@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ export interface BomData {
   created_at?: string;
   created_by?: string | null;
   updated_at?: string;
+  type: "Big" | "Small" | null;
+  default_model_url: string | null;
 }
 
 interface BomFormDialogProps {
@@ -55,6 +57,8 @@ const defaultFormData: BomData = {
   kanban_code: null,
   sequence: null,
   assy_line_no: null,
+  type: null,
+  default_model_url: "",
   source: "KYBJ",
 };
 
@@ -103,6 +107,16 @@ const BomFormDialog = ({ isOpen, onOpenChange, editingBom, onSubmit }: BomFormDi
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="default_model_url">Default Model URL (Teachable Machine)</Label>
+            <Input
+              id="default_model_url"
+              value={formData.default_model_url || ""}
+              onChange={handleChange}
+              placeholder="https://teachablemachine.withgoogle.com/models/..."
+            />
+            <p className="text-xs text-muted-foreground">Optional: Link specific AI model to this part.</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="unix_no">Unix No*</Label>
@@ -249,6 +263,22 @@ const BomFormDialog = ({ isOpen, onOpenChange, editingBom, onSubmit }: BomFormDi
                   <SelectItem value="KCMI">KCMI</SelectItem>
                   <SelectItem value="GM">GM</SelectItem>
                   <SelectItem value="YSN">YSN</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="type">Type</Label>
+              <Select
+                value={formData.type || "none"}
+                onValueChange={(value) => handleSelectChange("type", value === "none" ? "" : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Type (Optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="Big">Big</SelectItem>
+                  <SelectItem value="Small">Small</SelectItem>
                 </SelectContent>
               </Select>
             </div>

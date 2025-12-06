@@ -19,6 +19,9 @@ import KdUnset from "./pages/KdUnset";
 import RackMap from "./pages/RackMap";
 import StockCheck from "./pages/StockCheck";
 import DailyProductionPlan from "./pages/DailyProductionPlan";
+import PartnerRack from "./pages/PartnerRack";
+import SupplyBigPart from "./pages/SupplyBigPart";
+import ObjectCounter from "./pages/ObjectCounter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +49,9 @@ const App = () => (
           <Route path="/rack-map" element={<RackMap />} />
           <Route path="/stock-check" element={<StockCheck />} />
           <Route path="/daily-production-plan" element={<DailyProductionPlan />} />
+          <Route path="/partner-rack" element={<PartnerRack />} />
+          <Route path="/supply-big-part" element={<SupplyBigPart />} />
+          <Route path="/object-counter" element={<ObjectCounter />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

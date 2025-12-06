@@ -47,6 +47,7 @@ const BomTable = ({ boms, searchTerm, onSearchChange, onEdit, onDelete }: BomTab
               <TableHead>Safety Stock</TableHead>
               <TableHead>Rack</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Source</TableHead>
               {hasRole(["admin", "controller"]) && <TableHead>Actions</TableHead>}
             </TableRow>
@@ -64,6 +65,7 @@ const BomTable = ({ boms, searchTerm, onSearchChange, onEdit, onDelete }: BomTab
                 <TableCell>{bom.safety_stock || "-"}</TableCell>
                 <TableCell>{bom.rack || "-"}</TableCell>
                 <TableCell>{bom.location || "-"}</TableCell>
+                <TableCell>{bom.type || "-"}</TableCell>
                 <TableCell>{bom.source}</TableCell>
                 {hasRole(["admin", "controller"]) && (
                   <TableCell>

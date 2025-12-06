@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Search, CheckCircle, AlertCircle, PackageSearch } from "lucide-react";
 import QrScanner from "@/components/QrScanner";
+import CountScanner from "@/components/CountScanner"; // Import CountScanner
 
 interface StockCheckResult {
     childPart: string;
@@ -44,6 +45,7 @@ const StockCheck = () => {
     const [qtyToProduce, setQtyToProduce] = useState<number>(1);
     const [isQtyDialogOpen, setIsQtyDialogOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isCountScannerOpen, setIsCountScannerOpen] = useState(false); // State for CountScanner
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<StockCheckResult[] | null>(null);
     const [checkedParentPart, setCheckedParentPart] = useState("");
@@ -284,6 +286,14 @@ const StockCheck = () => {
                                         }
                                     }}
                                 />
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => setIsCountScannerOpen(true)}
+                                    title="Scan to Count"
+                                >
+                                    <PackageSearch className="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
                         <DialogFooter>
@@ -301,6 +311,15 @@ const StockCheck = () => {
                     onScanSuccess={handleScanSuccess}
                     title="Scan Parent Part"
                     description="Scan QR Code pada Kanban atau Label Parent Part"
+                />
+
+                <CountScanner
+                    isOpen={isCountScannerOpen}
+                    onOpenChange={setIsCountScannerOpen}
+                    onCountComplete={(count) => setQtyToProduce(count)}
+                    initialCount={qtyToProduce}
+                    title="Scan Qty Produksi"
+                    description="Scan barcode item/box untuk menghitung jumlah produksi"
                 />
             </div>
         </div>

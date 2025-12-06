@@ -79,6 +79,8 @@ export type Database = {
           source: string | null
           unix_no: string
           updated_at: string
+          type: "Big" | "Small" | null // Added type to bom_master
+          default_model_url: string | null
         }
         Insert: {
           assy_line_no?: string | null
@@ -102,6 +104,7 @@ export type Database = {
           source?: string | null
           unix_no: string
           updated_at?: string
+          type?: "Big" | "Small" | null // Added type to bom_master
         }
         Update: {
           assy_line_no?: string | null
@@ -125,6 +128,7 @@ export type Database = {
           source?: string | null
           unix_no?: string
           updated_at?: string
+          type?: "Big" | "Small" | null // Added type to bom_master
         }
         Relationships: []
       }
@@ -182,6 +186,42 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      partner_rack: {
+        Row: {
+          id: number
+          part_no: string
+          part_name: string
+          qty_per_box: number | null
+          type: "Big" | "Small" | null
+          rack_location: string
+          created_at: string
+          default_model_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          part_no: string
+          part_name: string
+          qty_per_box?: number | null
+          type?: "Big" | "Small" | null
+          rack_location: string
+          created_at?: string
+          default_model_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          part_no?: string
+          part_name?: string
+          qty_per_box?: number | null
+          type?: "Big" | "Small" | null
+          rack_location?: string
+          created_at?: string
+          default_model_url?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

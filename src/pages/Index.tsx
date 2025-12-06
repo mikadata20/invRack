@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import ProcessCard from "@/components/ProcessCard";
 import StatsCard from "@/components/StatsCard";
-import { PackagePlus, Package, ClipboardList, BarChart3, LogOut, Package2, Database, Users, FileText, History, Box, MinusSquare, LayoutGrid, PackageSearch, FileSpreadsheet } from "lucide-react";
+import { PackagePlus, Package, ClipboardList, BarChart3, LogOut, Package2, Database, Users, FileText, History, Box, MinusSquare, LayoutGrid, PackageSearch, FileSpreadsheet, Network, Layers } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ThemeToggle } from "@/components/ThemeToggle"; // Import ThemeToggle
 import { Tables } from "@/integrations/supabase/types"; // Import Tables type
@@ -142,6 +142,13 @@ const Index = () => {
               onClick={() => navigate("/supply")}
             />
             <ProcessCard
+              title="Supply Big Part"
+              description="Supply big/partner parts"
+              icon={PackagePlus}
+              variant="kobetsu"
+              onClick={() => navigate("/supply-big-part")}
+            />
+            <ProcessCard
               title="Picking Process"
               description="Pick parts with kanban"
               icon={Package}
@@ -240,6 +247,20 @@ const Index = () => {
               icon={LayoutGrid}
               variant="dashboard"
               onClick={() => navigate("/rack-map")}
+            />
+            <ProcessCard
+              title="Partner Rack"
+              description="Manage partner rack locations"
+              icon={Network}
+              variant="picking"
+              onClick={() => navigate("/partner-rack")}
+            />
+            <ProcessCard
+              title="Smart Counter"
+              description="AI Object Counting"
+              icon={Layers}
+              variant="dashboard"
+              onClick={() => navigate("/object-counter")}
             />
           </div>
         </section>

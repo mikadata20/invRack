@@ -10,6 +10,7 @@ import ProcessAlert from "@/components/ProcessAlert";
 import { processLabel } from "@/utils/labelProcessor";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types"; // Import Tables types
 import QrScanner from "@/components/QrScanner"; // Import QrScanner
+import CountScanner from "@/components/CountScanner"; // Import CountScanner
 
 interface RackItem {
   child_part: string;
@@ -36,6 +37,7 @@ const Supply = () => {
   const [alert, setAlert] = useState<AlertState | null>(null);
   const [currentStock, setCurrentStock] = useState<number | null>(null);
   const [scannedPO, setScannedPO] = useState<string | null>(null); // New state for scanned PO
+  const [isCountScannerOpen, setIsCountScannerOpen] = useState(false); // State for CountScanner
 
   const [isScannerOpen, setIsScannerOpen] = useState(false); // State for scanner dialog
   const [scanTarget, setScanTarget] = useState<"rackLocation" | "scannedLabel" | null>(null); // To know which input to fill
@@ -108,24 +110,24 @@ const Supply = () => {
 
       // Fetch current stock for the selected item and rack location
       const { data: inventoryData, error: inventoryError } = await supabase
-          .from("rack_inventory")
-          .select("qty")
-          .eq("part_no", processed.PartNo)
-          .eq("rack_location", rackLocation)
-          .maybeSingle();
+        .from("rack_inventory")
+        .select("qty")
+        .eq("part_no", processed.PartNo)
+        .eq("rack_location", rackLocation)
+        .maybeSingle();
 
       if (inventoryError) throw inventoryError;
 
       const fetchedCurrentStock = (inventoryData as Tables<'rack_inventory'> | null)?.qty ?? 0;
-      
+
       setCurrentStock(fetchedCurrentStock); // Set current stock to state
       setScannedPO(processed.PO); // Store the scanned PO
 
       setSelectedItem(item);
       setStep("input-qty");
-      setAlert({ 
-        type: "success", 
-        title: "Item ditemukan", 
+      setAlert({
+        type: "success",
+        title: "Item ditemukan",
         description: `Part No: ${processed.PartNo} - Item: ${item.part_name} - PO: ${processed.PO || 'N/A'}`
       });
     } catch (error: any) {
@@ -167,7 +169,7 @@ const Supply = () => {
       const newStock = oldStock + quantity;
 
       if (existing) {
-        const updatePayload: TablesUpdate<'rack_inventory'> = { 
+        const updatePayload: TablesUpdate<'rack_inventory'> = {
           qty: newStock,
           last_supply: new Date().toISOString(),
           part_name: partName,
@@ -322,7 +324,7 @@ const Supply = () => {
                       onKeyDown={(e) => e.key === "Enter" && handleScanRack()}
                       autoFocus
                     />
-                    <Button 
+                    <Button
                       type="button"
                       onClick={() => { setIsScannerOpen(true); setScanTarget("rackLocation"); }}
                       className="shrink-0 bg-supply hover:bg-supply/90"
@@ -366,7 +368,7 @@ const Supply = () => {
                       onKeyDown={(e) => e.key === "Enter" && handleScanItem()}
                       autoFocus
                     />
-                    <Button 
+                    <Button
                       type="button"
                       onClick={() => { setIsScannerOpen(true); setScanTarget("scannedLabel"); }}
                       className="shrink-0 bg-supply hover:bg-supply/90"
@@ -422,7 +424,17 @@ const Supply = () => {
                     onChange={(e) => setQty(e.target.value)}
                     autoFocus
                   />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setIsCountScannerOpen(true)}
+                    className="shrink-0"
+                    title="Scan to Count"
+                  >
+                    <PackagePlus className="h-4 w-4" />
+                  </Button>
                 </div>
+
 
                 <div className="flex gap-2">
                   <Button
@@ -460,7 +472,15 @@ const Supply = () => {
         title="Scan untuk Supply"
         description={`Memindai untuk: ${scanTarget === "rackLocation" ? "Lokasi Rak" : "Label Part"}`}
       />
-    </div>
+      <CountScanner
+        isOpen={isCountScannerOpen}
+        onOpenChange={setIsCountScannerOpen}
+        onCountComplete={(count) => setQty(count.toString())}
+        initialCount={parseInt(qty) || 0}
+        title="Hitung Supply"
+        description="Scan barcode item untuk menghitung jumlah supply"
+      />
+    </div >
   );
 };
 
